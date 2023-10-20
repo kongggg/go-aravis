@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	aravis "github.com/thinkski/go-aravis"
+	aravis "github.com/kongggg/go-aravis"
 )
 
 var exposureTime float64

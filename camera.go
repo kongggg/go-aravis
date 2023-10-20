@@ -1,6 +1,6 @@
 package aravis
 
-// #cgo pkg-config: aravis-0.6
+// #cgo pkg-config: aravis-0.8
 // #include <arv.h>
 // #include <stdlib.h>
 import "C"
@@ -27,23 +27,29 @@ const (
 func NewCamera(name string) (Camera, error) {
 	var c Camera
 	var err error
+	var gErr *C.GError
 
 	cs := C.CString(name)
-	c.camera, err = C.arv_camera_new(cs)
+	c.camera, err = C.arv_camera_new(cs, &gErr)
 	C.free(unsafe.Pointer(cs))
 
+	handleGError(gErr)
 	return c, err
 }
 
 func (c *Camera) CreateStream() (Stream, error) {
 	var s Stream
 	var err error
+	var gErr *C.GError
 
 	s.stream, err = C.arv_camera_create_stream(
 		c.camera,
 		nil,
 		nil,
+		&gErr,
 	)
+
+	handleGError(gErr)
 
 	if s.stream == nil {
 		return Stream{}, errors.New("Failed to create stream")
@@ -62,68 +68,96 @@ func (c *Camera) GetDevice() (Device, error) {
 }
 
 func (c *Camera) GetVendorName() (string, error) {
-	name, error := C.arv_camera_get_vendor_name(c.camera)
-	return C.GoString(name), error
+	var gErr *C.GError
+	name, err := C.arv_camera_get_vendor_name(c.camera, &gErr)
+
+	handleGError(gErr)
+
+	return C.GoString(name), err
 }
 
 func (c *Camera) GetModelName() (string, error) {
-	name, error := C.arv_camera_get_model_name(c.camera)
-	return C.GoString(name), error
+	var gErr *C.GError
+
+	name, err := C.arv_camera_get_model_name(c.camera, &gErr)
+
+	handleGError(gErr)
+
+	return C.GoString(name), err
 }
 
 func (c *Camera) GetDeviceId() (string, error) {
-	id, error := C.arv_camera_get_device_id(c.camera)
-	return C.GoString(id), error
+	var gErr *C.GError
+	id, err := C.arv_camera_get_device_id(c.camera, &gErr)
+	handleGError(gErr)
+	return C.GoString(id), err
 }
 
 func (c *Camera) GetSensorSize() (int, int, error) {
 	var width, height int
+	var gErr *C.GError
 	_, err := C.arv_camera_get_sensor_size(
 		c.camera,
 		(*C.gint)(unsafe.Pointer(&width)),
 		(*C.gint)(unsafe.Pointer(&height)),
+		&gErr,
 	)
+
+	handleGError(gErr)
+
 	return int(width), int(height), err
 }
 
 func (c *Camera) SetRegion(x, y, width, height int) {
+	var gErr *C.GError
 	C.arv_camera_set_region(c.camera,
 		C.gint(x),
 		C.gint(y),
 		C.gint(width),
 		C.gint(height),
+		&gErr,
 	)
+	handleGError(gErr)
 }
 
 func (c *Camera) GetRegion() (int, int, int, int, error) {
 	var x, y, width, height int
+	var gErr *C.GError
 	_, err := C.arv_camera_get_region(
 		c.camera,
 		(*C.gint)(unsafe.Pointer(&x)),
 		(*C.gint)(unsafe.Pointer(&y)),
 		(*C.gint)(unsafe.Pointer(&width)),
 		(*C.gint)(unsafe.Pointer(&height)),
+		&gErr,
 	)
+	handleGError(gErr)
 	return int(x), int(y), int(width), int(height), err
 }
 
 func (c *Camera) GetHeightBounds() (int, int, error) {
 	var min, max int
+	var gErr *C.GError
 	_, err := C.arv_camera_get_height_bounds(
 		c.camera,
 		(*C.gint)(unsafe.Pointer(&min)),
 		(*C.gint)(unsafe.Pointer(&max)),
+		&gErr,
 	)
+	handleGError(gErr)
 	return int(min), int(max), err
 }
 
 func (c *Camera) GetWidthBounds() (int, int, error) {
 	var min, max int
+	var gErr *C.GError
 	_, err := C.arv_camera_get_width_bounds(
 		c.camera,
 		(*C.gint)(unsafe.Pointer(&min)),
 		(*C.gint)(unsafe.Pointer(&max)),
+		&gErr,
 	)
+	handleGError(gErr)
 	return int(min), int(max), err
 }
 
@@ -133,11 +167,14 @@ func (c *Camera) SetBinning() {
 
 func (c *Camera) GetBinning() (int, int, error) {
 	var min, max int
+	var gErr *C.GError
 	_, err := C.arv_camera_get_binning(
 		c.camera,
 		(*C.gint)(unsafe.Pointer(&min)),
 		(*C.gint)(unsafe.Pointer(&max)),
+		&gErr,
 	)
+	handleGError(gErr)
 	return int(min), int(max), err
 }
 
@@ -170,77 +207,108 @@ func (c *Camera) GetAvailablePixelFormatsAsStrings() {
 }
 
 func (c *Camera) StartAcquisition() {
-	C.arv_camera_start_acquisition(c.camera)
+	var gErr *C.GError
+	C.arv_camera_start_acquisition(c.camera, &gErr)
+	handleGError(gErr)
 }
 
 func (c *Camera) StopAcquisition() {
-	C.arv_camera_stop_acquisition(c.camera)
+	var gErr *C.GError
+	C.arv_camera_stop_acquisition(c.camera, &gErr)
+	handleGError(gErr)
 }
 
 func (c *Camera) AbortAcquisition() {
-	C.arv_camera_abort_acquisition(c.camera)
+	var gErr *C.GError
+	C.arv_camera_abort_acquisition(c.camera, &gErr)
+	handleGError(gErr)
 }
 
 func (c *Camera) SetAcquisitionMode(mode int) {
-	C.arv_camera_set_acquisition_mode(c.camera, C.ArvAcquisitionMode(mode))
+	var gErr *C.GError
+	C.arv_camera_set_acquisition_mode(c.camera, C.ArvAcquisitionMode(mode), &gErr)
+	handleGError(gErr)
 }
 
 func (c *Camera) SetFrameRate(frameRate float64) {
-	C.arv_camera_set_frame_rate(c.camera, C.double(frameRate))
+	var gErr *C.GError
+	C.arv_camera_set_frame_rate(c.camera, C.double(frameRate), &gErr)
+	handleGError(gErr)
 }
 
 func (c *Camera) GetFrameRate() (float64, error) {
-	fr, err := C.arv_camera_get_frame_rate(c.camera)
+	var gErr *C.GError
+	fr, err := C.arv_camera_get_frame_rate(c.camera, &gErr)
+	handleGError(gErr)
 	return float64(fr), err
 }
 
 func (c *Camera) GetFrameRateBounds() (float64, float64, error) {
 	var min, max float64
+	var gErr *C.GError
 	_, err := C.arv_camera_get_frame_rate_bounds(
 		c.camera,
 		(*C.double)(unsafe.Pointer(&min)),
 		(*C.double)(unsafe.Pointer(&max)),
+		&gErr,
 	)
+	handleGError(gErr)
 	return float64(min), float64(max), err
 }
 
 func (c *Camera) SetTrigger(source string) {
+	var gErr *C.GError
 	csource := C.CString(source)
-	C.arv_camera_set_trigger(c.camera, csource)
+	C.arv_camera_set_trigger(c.camera, csource, &gErr)
 	C.free(unsafe.Pointer(csource))
+	handleGError(gErr)
 }
 
 func (c *Camera) SetTriggerSource(source string) {
+	var gErr *C.GError
 	csource := C.CString(source)
-	C.arv_camera_set_trigger_source(c.camera, csource)
+	C.arv_camera_set_trigger_source(c.camera, csource, &gErr)
 	C.free(unsafe.Pointer(csource))
+	handleGError(gErr)
 }
 
 func (c *Camera) GetTriggerSource() (string, error) {
-	csource, err := C.arv_camera_get_trigger_source(c.camera)
+	var gErr *C.GError
+	csource, err := C.arv_camera_get_trigger_source(c.camera, &gErr)
+	handleGError(gErr)
 	return C.GoString(csource), err
 }
 
 func (c *Camera) SoftwareTrigger() {
-	C.arv_camera_software_trigger(c.camera)
+	var gErr *C.GError
+	C.arv_camera_software_trigger(c.camera, &gErr)
+	handleGError(gErr)
 }
 
 func (c *Camera) IsExposureTimeAvailable() (bool, error) {
-	gboolean, err := C.arv_camera_is_exposure_time_available(c.camera)
+	var gErr *C.GError
+	gboolean, err := C.arv_camera_is_exposure_time_available(c.camera, &gErr)
+	handleGError(gErr)
 	return toBool(gboolean), err
 }
 
 func (c *Camera) IsExposureAutoAvailable() (bool, error) {
-	gboolean, err := C.arv_camera_is_exposure_auto_available(c.camera)
+	var gErr *C.GError
+	gboolean, err := C.arv_camera_is_exposure_auto_available(c.camera, &gErr)
+	handleGError(gErr)
 	return toBool(gboolean), err
 }
 
 func (c *Camera) SetExposureTime(time float64) {
-	C.arv_camera_set_exposure_time(c.camera, C.double(time))
+	var gErr *C.GError
+	C.arv_camera_set_exposure_time(c.camera, C.double(time), &gErr)
+	handleGError(gErr)
 }
 
 func (c *Camera) GetExposureTime() (float64, error) {
-	cdouble, err := C.arv_camera_get_exposure_time(c.camera)
+	var gErr *C.GError
+	cdouble, err := C.arv_camera_get_exposure_time(c.camera, &gErr)
+	handleGError(gErr)
 	return float64(cdouble), err
 }
 
@@ -249,7 +317,9 @@ func (c *Camera) GetExposureTimeBounds() {
 }
 
 func (c *Camera) SetExposureTimeAuto(mode int) {
-	C.arv_camera_set_exposure_time_auto(c.camera, C.ArvAuto(mode))
+	var gErr *C.GError
+	C.arv_camera_set_exposure_time_auto(c.camera, C.ArvAuto(mode), &gErr)
+	handleGError(gErr)
 }
 
 func (c *Camera) GetExposureTimeAuto() {
@@ -257,21 +327,28 @@ func (c *Camera) GetExposureTimeAuto() {
 }
 
 func (c *Camera) SetGain(gain float64) {
-	C.arv_camera_set_gain(c.camera, C.double(gain))
+	var gErr *C.GError
+	C.arv_camera_set_gain(c.camera, C.double(gain), &gErr)
+	handleGError(gErr)
 }
 
 func (c *Camera) GetGain() (float64, error) {
-	cgain, err := C.arv_camera_get_gain(c.camera)
+	var gErr *C.GError
+	cgain, err := C.arv_camera_get_gain(c.camera, &gErr)
+	handleGError(gErr)
 	return float64(cgain), err
 }
 
 func (c *Camera) GetGainBounds() (float64, float64, error) {
 	var min, max float64
+	var gErr *C.GError
 	_, err := C.arv_camera_get_gain_bounds(
 		c.camera,
 		(*C.double)(unsafe.Pointer(&min)),
 		(*C.double)(unsafe.Pointer(&max)),
+		&gErr,
 	)
+	handleGError(gErr)
 	return float64(min), float64(max), err
 }
 
@@ -280,7 +357,9 @@ func (c *Camera) SetGainAuto() {
 }
 
 func (c *Camera) GetPayloadSize() (uint, error) {
-	csize, err := C.arv_camera_get_payload(c.camera)
+	var gErr *C.GError
+	csize, err := C.arv_camera_get_payload(c.camera, &gErr)
+	handleGError(gErr)
 	return uint(csize), err
 }
 
@@ -290,39 +369,55 @@ func (c *Camera) IsGVDevice() (bool, error) {
 }
 
 func (c *Camera) GVGetNumStreamChannels() (int, error) {
-	cint, err := C.arv_camera_gv_get_n_stream_channels(c.camera)
+	var gErr *C.GError
+	cint, err := C.arv_camera_gv_get_n_stream_channels(c.camera, &gErr)
+	handleGError(gErr)
 	return int(cint), err
 }
 
 func (c *Camera) GVSelectStreamChannels(id int) {
-	C.arv_camera_gv_select_stream_channel(c.camera, C.gint(id))
+	var gErr *C.GError
+	C.arv_camera_gv_select_stream_channel(c.camera, C.gint(id), &gErr)
+	handleGError(gErr)
 }
 
 func (c *Camera) GVGetCurrentStreamChannel() (int, error) {
-	cint, err := C.arv_camera_gv_get_current_stream_channel(c.camera)
+	var gErr *C.GError
+	cint, err := C.arv_camera_gv_get_current_stream_channel(c.camera, &gErr)
+	handleGError(gErr)
 	return int(cint), err
 }
 
 func (c *Camera) GVGetPacketDelay() (int64, error) {
-	cint64, err := C.arv_camera_gv_get_packet_delay(c.camera)
+	var gErr *C.GError
+	cint64, err := C.arv_camera_gv_get_packet_delay(c.camera, &gErr)
+	handleGError(gErr)
 	return int64(cint64), err
 }
 
 func (c *Camera) GVSetPacketDelay(delay int64) {
-	C.arv_camera_gv_set_packet_delay(c.camera, C.gint64(delay))
+	var gErr *C.GError
+	C.arv_camera_gv_set_packet_delay(c.camera, C.gint64(delay), &gErr)
+	handleGError(gErr)
 }
 
 func (c *Camera) GVGetPacketSize() (int, error) {
-	csize, err := C.arv_camera_gv_get_packet_size(c.camera)
+	var gErr *C.GError
+	csize, err := C.arv_camera_gv_get_packet_size(c.camera, &gErr)
+	handleGError(gErr)
 	return int(csize), err
 }
 
 func (c *Camera) GVSetPacketSize(size int) {
-	C.arv_camera_gv_set_packet_size(c.camera, C.gint(size))
+	var gErr *C.GError
+	C.arv_camera_gv_set_packet_size(c.camera, C.gint(size), &gErr)
+	handleGError(gErr)
 }
 
 func (c *Camera) GetChunkMode() (bool, error) {
-	mode, err := C.arv_camera_get_chunk_mode(c.camera)
+	var gErr *C.GError
+	mode, err := C.arv_camera_get_chunk_mode(c.camera, &gErr)
+	handleGError(gErr)
 	return toBool(mode), err
 }
 

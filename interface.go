@@ -1,6 +1,6 @@
 package aravis
 
-// #cgo pkg-config: aravis-0.6
+// #cgo pkg-config: aravis-0.8
 // #include <arv.h>
 // #include <stdlib.h>
 import "C"
@@ -9,6 +9,11 @@ import "unsafe"
 func GetDeviceId(index uint) (string, error) {
 	s, err := C.arv_get_device_id(C.uint(index))
 	return C.GoString(s), err
+}
+
+func GetDeviceAddress(index uint) (string, error) {
+	ip, err := C.arv_get_device_address(C.uint(index))
+	return C.GoString(ip), err
 }
 
 func GetInterfaceId(index uint) (string, error) {
